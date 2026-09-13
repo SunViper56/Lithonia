@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const SUPABASE_URL = "https://llvubqampmiqzutvtwsa.supabase.co";
+  const SUPABASE_URL = "https://llvubqampmiqzutvtwsa.db.co";
   const SUPABASE_KEY = "sb_publishable_xN7WRiCssemhT79NTtwWrQ_a3cb3Drv";
 
-  const supabase = window.supabase.createClient(
+  const db = window.db.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
   );
@@ -1091,7 +1091,7 @@ function render(){
   `;
 }
 async function signOut(){
-  await supabase.auth.signOut();
+  await db.auth.signOut();
   isDM = false;
   render();
 }
@@ -1100,10 +1100,10 @@ async function signOut(){
 // Init
 // ---------------------------------------------------------------------
 (async function init(){
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { session } } = await db.auth.getSession();
   isDM = !!session;
 
-  supabase.auth.onAuthStateChange((_event, session) => {
+  db.auth.onAuthStateChange((_event, session) => {
     isDM = !!session;
     render();
   });
