@@ -625,6 +625,29 @@ function openSignInModal(){
   }, 30);
 }
 
+async function handleSignIn(e){
+  e.preventDefault();
+
+  const email = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input').value;
+
+  const { error } = await db.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    alert('Sign-in failed: ' + error.message);
+    return false;
+  }
+
+  isDM = true;
+  closeModal();
+  render();
+
+  return false;
+}
+  
 // ---------------------------------------------------------------------
 // Export / Import backup
 // ---------------------------------------------------------------------
