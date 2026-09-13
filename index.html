@@ -374,7 +374,7 @@
    ==================================================================== */
 
 // ---- DM PASSWORD: change this to your own secret phrase before sharing the link ----
-const DM_PASSCODE = "Xaaymax22!!!";
+
 
 const CATEGORIES = [
   { key:'characters', label:'Characters', color:'var(--c-characters)', hex:'#7A2727', icon:'icon-characters', desc:"The people who shape Lithonia's fate." },
@@ -399,7 +399,7 @@ let sidebarOpen = false;
 let view = { type:'home' };
 let dataLoaded = false;
 
-const SEED_ENTRIES = [
+
   {
     id:'seed_sera', title:'Sera Emberwood', category:'characters',
     tags:['ranger','ally','ashwood'],
@@ -461,38 +461,119 @@ const SEED_ENTRIES = [
 const DEFAULT_ABOUT = `Lithonia is a world still measuring itself against a wound in its own history — the Shattering that gave it its name. Kingdoms have risen since, gods are worshipped in old and new ways, and the ruins of a lost era wait, half-buried, for the next expedition foolish or brave enough to disturb them.\n\nThis compendium holds everything discovered so far. Browse the chapters at left, or search for something by name.`;
 
 // ---------------------------------------------------------------------
-// Storage
+// Supabase Storage
 // ---------------------------------------------------------------------
-async function loadData(){
-  try{
-    const res = await window.storage.get('lithonia-entries', true);
-    entries = res && res.value ? JSON.parse(res.value) : null;
-  } catch(e){ entries = null; }
-  if(!entries){
-    entries = SEED_ENTRIES;
-    await saveEntries();
-  }
 
-  try{
-    const res = await window.storage.get('lithonia-about', true);
-    aboutText = res && res.value ? JSON.parse(res.value) : null;
-  } catch(e){ aboutText = null; }
-  if(aboutText === null || aboutText === undefined){
-    aboutText = DEFAULT_ABOUT;
-    await saveAbout();
+function rowToEntry(row){
+  return {
+    id: row.id,
+    title: row.title,
+    category: row.category,
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    summary: row.summary || '',
+    content: row.content || '',
+    image: row.image || '',
+    relatedIds: Array.isArray(row.related_ids) ? row.related_ids : [],
+    createdAt: Number(row.created_at),
+    updatedAt: Number(row.updated_at)
+  };
+}
+
+async function loadData(){
+  try {
+    const { data, error } = await supabase
+      .from('entries')
+      .select('*')
+      .order('title', { ascending: true });
+
+    if(error) throw error;
+
+    entries = (data || []).map(rowToEntry);
+
+    const { data: settings, error: settingsError } = await supabase
+      .from('wiki_settings')
+      .select('*')
+      .eq('id', 'main')
+      .maybeSingle();
+
+    if(settingsError) throw settingsError;
+
+    aboutText = settings ? settings.about_text : '';
+
+    dataLoaded = true;
+
+  } catch(e) {
+    console.error('Failed to load Lithonia data:', e);
+    alert('Could not connect to the Lithonia archives. Please check your Supabase connection.');
+    entries = [];
+    aboutText = '';
+    dataLoaded = true;
   }
-  dataLoaded = true;
+}
+
+async function saveEntryToDatabase(entry){
+  const row = {
+    id: entry.id,
+    title: entry.title,
+    category: entry.category,
+    tags: entry.tags || [],
+    summary: entry.summary || '',
+    content: entry.content || '',
+    image: entry.image || '',
+    related_ids: entry.relatedIds || [],
+    created_at: entry.createdAt,
+    updated_at: entry.updatedAt
+  };
+
+  const { error } = await supabase
+    .from('entries')
+    .upsert(row);
+
+  if(error){
+    console.error('Failed to save entry:', error);
+    alert('Could not save this entry. Make sure you are signed in as the DM.');
+    throw error;
+  }
+}
+
+async function deleteEntryFromDatabase(id){
+  const { error } = await supabase
+    .from('entries')
+    .delete()
+    .eq('id', id);
+
+  if(error){
+    console.error('Failed to delete entry:', error);
+    alert('Could not delete this entry.');
+    throw error;
+  }
 }
 
 async function saveEntries(){
-  try{ await window.storage.set('lithonia-entries', JSON.stringify(entries), true); }
-  catch(e){ console.error('Failed to save entries', e); alert('Could not save — please check your connection and try again.'); }
+  try {
+    for(const entry of entries){
+      await saveEntryToDatabase(entry);
+    }
+  } catch(e) {
+    console.error('Failed to save entries:', e);
+  }
 }
 
 async function saveAbout(){
-  try{ await window.storage.set('lithonia-about', JSON.stringify(aboutText), true); }
-  catch(e){ console.error('Failed to save about text', e); }
-}
+  try {
+    const { error } = await supabase
+      .from('wiki_settings')
+      .upsert({
+        id: 'main',
+        about_text: aboutText
+      });
+
+    if(error) throw error;
+
+  } catch(e) {
+    console.error('Failed to save about text:', e);
+    alert('Could not save the introduction. Make sure you are signed in as the DM.');
+  }
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -585,22 +666,26 @@ function openSignInModal(){
   `);
   setTimeout(()=>{ const el = document.getElementById('passcode-input'); if(el) el.focus(); }, 30);
 }
-function handleSignIn(e){
+async function handleSignIn(e){
   e.preventDefault();
-  const val = document.getElementById('passcode-input').value;
-  if(val === DM_PASSCODE){
-    isDM = true;
-    closeModal();
-    render();
-  } else {
-    document.getElementById('signin-error').style.display = 'block';
+
+  const email = document.getElementById('email-input').value.trim();
+  const password = document.getElementById('password-input').value;
+
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    alert('Sign-in failed: ' + error.message);
+    return false;
   }
-  return false;
-}
-function signOut(){
-  isDM = false;
-  if(view.type === 'edit') view = { type:'home' };
+
+  isDM = true;
+  closeModal();
   render();
+  return false;
 }
 
 // ---------------------------------------------------------------------
