@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lithonia — A World Compendium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --parchment:#E9DCB9;
+    --parchment-deep:#DDC996;
+    --parchment-deeper:#D2BA82;
+    --ink:#2B1D14;
+    --ink-soft:#5B4636;
+    --gold:#A6813A;
+    --gold-bright:#C79F4E;
+    --seal:#7A2727;
+    --seal-dark:#5E1C1C;
+    --shadow:rgba(43,29,20,0.28);
+
+    --c-characters:#7A2727;
+    --c-locations:#3F5B3C;
+    --c-kingdoms:#8A6D1F;
+    --c-gods:#5B3A5C;
+    --c-history:#3E4A6B;
+    --c-factions:#9C5024;
+    --c-creatures:#2F5B57;
+    --c-items:#6B5A1E;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background-color:var(--parchment);
+    background-image:
+      repeating-linear-gradient(0deg, rgba(43,29,20,0.02) 0px, transparent 1px, transparent 2px),
+      repeating-linear-gradient(90deg, rgba(43,29,20,0.015) 0px, transparent 1px, transparent 3px);
+    color:var(--ink);
+    font-family:'EB Garamond', Georgia, 'Times New Roman', serif;
+    font-size:18px;
+    line-height:1.6;
+    min-height:100vh;
+  }
+  h1,h2,h3,h4,.display{
+    font-family:'Cinzel', 'Times New Roman', serif;
+    font-weight:600;
+    letter-spacing:0.02em;
+    color:var(--ink);
+    margin:0;
+  }
+  a{color:var(--seal); text-decoration:none;}
+  a:hover{text-decoration:underline dotted;}
+  button{
+    font-family:'EB Garamond', Georgia, serif;
+    font-size:16px;
+    cursor:pointer;
+  }
+  input,textarea,select{
+    font-family:'EB Garamond', Georgia, serif;
+    font-size:16px;
+    background:var(--parchment);
+    border:1px solid var(--gold);
+    border-radius:2px;
+    color:var(--ink);
+    padding:8px 10px;
+  }
+  input:focus,textarea:focus,select:focus{
+    outline:2px solid var(--seal);
+    outline-offset:1px;
+  }
+  ::selection{ background:var(--gold-bright); }
+
+  /* ---------- Layout shell ---------- */
+  #app-root{ min-height:100vh; display:flex; flex-direction:column; }
+
+  header.masthead{
+    background:linear-gradient(180deg, var(--parchment-deep), var(--parchment-deeper));
+    border-bottom:3px double var(--gold);
+    padding:14px 24px;
+    display:flex;
+    align-items:center;
+    gap:20px;
+    position:sticky;
+    top:0;
+    z-index:50;
+  }
+  .masthead-title{
+    font-size:26px;
+    letter-spacing:0.06em;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .masthead-title small{
+    display:block;
+    font-family:'EB Garamond', serif;
+    font-style:italic;
+    font-size:12px;
+    letter-spacing:0.03em;
+    color:var(--ink-soft);
+    font-weight:400;
+  }
+  .masthead-spacer{ flex:1; }
+
+  .search-wrap{ position:relative; width:280px; max-width:40vw; }
+  .search-wrap input{ width:100%; padding:8px 12px; border-radius:14px; }
+  .search-results-drop{
+    position:absolute; top:calc(100% + 6px); left:0; right:0;
+    background:var(--parchment); border:1px solid var(--gold);
+    border-radius:6px; box-shadow:0 6px 18px var(--shadow);
+    max-height:340px; overflow-y:auto; z-index:80;
+  }
+  .search-results-drop .sr-item{
+    padding:9px 12px; border-bottom:1px solid rgba(166,129,58,0.35);
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+  }
+  .search-results-drop .sr-item:last-child{ border-bottom:none; }
+  .search-results-drop .sr-item:hover{ background:var(--parchment-deep); }
+  .sr-title{ font-weight:600; }
+  .sr-cat{ font-size:12.5px; color:var(--ink-soft); font-style:italic; }
+  .search-empty{ padding:10px 12px; color:var(--ink-soft); font-style:italic; }
+
+  .dm-controls{ display:flex; align-items:center; gap:8px; }
+  .btn{
+    background:var(--seal); color:var(--parchment);
+    border:1px solid var(--seal-dark); border-radius:3px;
+    padding:8px 14px; font-size:15px; letter-spacing:0.02em;
+  }
+  .btn:hover{ background:var(--seal-dark); }
+  .btn.secondary{
+    background:transparent; color:var(--ink); border:1px solid var(--gold);
+  }
+  .btn.secondary:hover{ background:rgba(166,129,58,0.15); }
+  .btn.tiny{ padding:4px 9px; font-size:13.5px; }
+  .btn.danger{ background:#7a2727; }
+  .btn.danger:hover{ background:#5e1c1c; }
+  .dm-badge{
+    font-family:'Cinzel',serif; font-size:12.5px; color:var(--seal);
+    border:1px solid var(--seal); border-radius:12px; padding:4px 10px;
+    white-space:nowrap;
+  }
+  .hamburger{ display:none; }
+
+  .layout{ display:flex; flex:1; max-width:1180px; margin:0 auto; width:100%; }
+
+  /* ---------- Sidebar ---------- */
+  nav.sidebar{
+    width:220px; flex-shrink:0; padding:26px 14px 40px;
+  }
+  nav.sidebar h4{
+    font-size:13px; letter-spacing:0.08em; color:var(--ink-soft);
+    margin-bottom:10px; padding-left:10px; font-weight:500;
+  }
+  .chapter-link{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 10px; border-radius:3px; margin-bottom:3px;
+    color:var(--ink); cursor:pointer; font-size:16.5px;
+  }
+  .chapter-link:hover{ background:rgba(166,129,58,0.18); text-decoration:none; }
+  .chapter-link.active{ background:var(--parchment-deeper); font-weight:600; }
+  .chapter-dot{ width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  .chapter-count{ margin-left:auto; font-size:13px; color:var(--ink-soft); }
+  .sidebar-home-link{
+    display:block; padding:8px 10px; margin-bottom:16px; font-family:'Cinzel',serif;
+    font-size:15px; color:var(--ink); cursor:pointer; border-radius:3px;
+  }
+  .sidebar-home-link:hover{ background:rgba(166,129,58,0.18); text-decoration:none; }
+
+  /* ---------- Main page frame ---------- */
+  main.page-area{ flex:1; padding:26px 24px 60px; min-width:0; }
+  .page-frame{
+    position:relative;
+    background:rgba(255,252,240,0.35);
+    border:1px solid var(--gold);
+    outline:1px solid rgba(166,129,58,0.4);
+    outline-offset:5px;
+    padding:38px 42px;
+    min-height:60vh;
+  }
+  .corner{ position:absolute; width:34px; height:34px; color:var(--gold); opacity:0.75; }
+  .corner.tl{ top:-2px; left:-2px; }
+  .corner.tr{ top:-2px; right:-2px; transform:scaleX(-1); }
+  .corner.bl{ bottom:-2px; left:-2px; transform:scaleY(-1); }
+  .corner.br{ bottom:-2px; right:-2px; transform:scale(-1,-1); }
+
+  .breadcrumb{ font-size:14.5px; color:var(--ink-soft); margin-bottom:18px; }
+  .breadcrumb a{ color:var(--ink-soft); }
+  .breadcrumb .sep{ margin:0 6px; }
+
+  /* ---------- Home hero ---------- */
+  .hero{ text-align:center; padding:10px 0 30px; }
+  .hero h1{ font-size:52px; letter-spacing:0.08em; }
+  .flourish{ width:220px; height:22px; margin:14px auto; color:var(--gold); }
+  .hero-about{
+    max-width:620px; margin:0 auto; color:var(--ink-soft); font-size:19px;
+    position:relative;
+  }
+  .about-edit-btn{ margin-top:10px; }
+
+  .chapter-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr));
+    gap:18px; margin-top:34px;
+  }
+  .chapter-tile{
+    border:1px solid rgba(166,129,58,0.5); border-radius:4px;
+    padding:18px 16px; cursor:pointer; text-align:left;
+    background:rgba(255,252,240,0.3);
+    transition:transform 0.12s ease, background 0.12s ease;
+  }
+  .chapter-tile:hover{ background:rgba(255,252,240,0.65); transform:translateY(-2px); }
+  .seal{
+    width:44px; height:44px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--parchment); margin-bottom:10px;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,0.15);
+  }
+  .seal svg{ width:22px; height:22px; }
+  .chapter-tile h3{ font-size:19px; margin-bottom:4px; }
+  .chapter-tile p{ font-size:14.5px; color:var(--ink-soft); margin:0; }
+  .chapter-tile .tile-count{ font-size:13px; color:var(--ink-soft); margin-top:8px; font-style:italic; }
+
+  .section-heading{
+    font-size:22px; margin:38px 0 14px; padding-bottom:8px;
+    border-bottom:1px solid var(--gold);
+  }
+  .recent-list .recent-row{
+    display:flex; align-items:baseline; gap:10px; padding:9px 0;
+    border-bottom:1px dashed rgba(166,129,58,0.5); cursor:pointer;
+  }
+  .recent-row:hover .recent-title{ text-decoration:underline dotted; }
+  .recent-title{ font-weight:600; }
+  .recent-cat{ font-size:13.5px; color:var(--ink-soft); font-style:italic; margin-left:auto; }
+
+  /* ---------- Category listing ---------- */
+  .cat-header{ display:flex; align-items:center; gap:14px; margin-bottom:6px; }
+  .cat-header h2{ font-size:30px; }
+  .cat-header p.cat-desc{ color:var(--ink-soft); font-style:italic; margin:4px 0 24px; }
+  .cat-toolbar{ display:flex; justify-content:flex-end; margin-bottom:14px; }
+
+  .entry-list .entry-row{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:14px 0; border-bottom:1px solid rgba(166,129,58,0.4);
+    cursor:pointer;
+  }
+  .entry-row:hover .entry-row-title{ text-decoration:underline dotted; }
+  .entry-tab{ width:5px; align-self:stretch; border-radius:2px; flex-shrink:0; margin-top:2px; }
+  .entry-row-body{ flex:1; min-width:0; }
+  .entry-row-title{ font-size:19px; font-weight:600; }
+  .entry-row-summary{ color:var(--ink-soft); font-size:15.5px; margin-top:2px; }
+  .tag-pill{
+    display:inline-block; font-size:12.5px; color:var(--ink-soft);
+    border:1px solid rgba(166,129,58,0.6); border-radius:10px;
+    padding:1px 9px; margin:6px 6px 0 0; cursor:pointer;
+  }
+  .tag-pill:hover{ background:rgba(166,129,58,0.18); }
+  .empty-note{ color:var(--ink-soft); font-style:italic; padding:30px 0; text-align:center; }
+
+  /* ---------- Entry detail ---------- */
+  .entry-header{ display:flex; align-items:flex-start; gap:16px; margin-bottom:6px; flex-wrap:wrap; }
+  .entry-header h2{ font-size:34px; flex:1; min-width:200px; }
+  .entry-actions{ display:flex; gap:8px; }
+  .cat-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'Cinzel',serif; font-size:13px; color:#fff;
+    padding:4px 11px 4px 8px; border-radius:12px; margin-bottom:16px;
+  }
+  .cat-badge svg{ width:13px; height:13px; }
+  .entry-image{ width:100%; max-height:340px; object-fit:cover; border:1px solid var(--gold); margin:6px 0 22px; border-radius:2px; }
+  .entry-tags{ margin-bottom:10px; }
+  .entry-content p:first-of-type::first-letter{
+    font-family:'Cinzel', serif; font-size:3.4em; float:left; line-height:0.8;
+    padding:0.06em 0.08em 0 0; color:var(--seal);
+  }
+  .entry-content p{ margin:0 0 16px; }
+  .wiki-link{ border-bottom:1px dotted var(--seal); }
+  .wiki-link.unwritten{ color:var(--ink-soft); border-bottom:1px dotted var(--ink-soft); cursor:default; font-style:italic; }
+  .related-box{ margin-top:34px; padding-top:18px; border-top:1px solid var(--gold); }
+  .related-box h4{ font-size:15px; color:var(--ink-soft); margin-bottom:10px; font-weight:500; }
+  .related-pill{
+    display:inline-block; background:rgba(166,129,58,0.16); border:1px solid var(--gold);
+    border-radius:3px; padding:6px 12px; margin:0 8px 8px 0; font-size:15px; cursor:pointer;
+  }
+  .related-pill:hover{ background:rgba(166,129,58,0.3); text-decoration:none; }
+  .entry-meta{ font-size:12.5px; color:var(--ink-soft); margin-top:30px; font-style:italic; }
+
+  /* ---------- Forms / modal ---------- */
+  .form-grid{ display:flex; flex-direction:column; gap:14px; max-width:640px; }
+  .form-grid label{ display:block; font-size:14.5px; color:var(--ink-soft); margin-bottom:5px; font-family:'Cinzel',serif; letter-spacing:0.02em; }
+  .form-grid input, .form-grid select, .form-grid textarea{ width:100%; }
+  .form-grid textarea{ resize:vertical; min-height:80px; }
+  .form-grid textarea.big{ min-height:220px; }
+  .form-actions{ display:flex; gap:10px; margin-top:6px; flex-wrap:wrap; }
+  .hint{ font-size:13px; color:var(--ink-soft); margin-top:3px; }
+
+  #modal-overlay{
+    position:fixed; inset:0; background:rgba(43,29,20,0.55);
+    display:none; align-items:flex-start; justify-content:center;
+    padding:5vh 16px; z-index:200; overflow-y:auto;
+  }
+  #modal-overlay.open{ display:flex; }
+  .modal-box{
+    background:var(--parchment); border:1px solid var(--gold); border-radius:6px;
+    box-shadow:0 12px 40px rgba(0,0,0,0.4); padding:30px 32px; max-width:640px; width:100%;
+    margin-bottom:5vh;
+  }
+  .modal-box h3{ font-size:22px; margin-bottom:18px; }
+  .modal-close-row{ display:flex; justify-content:flex-end; margin-top:20px; gap:10px; }
+
+  .loading-screen{
+    display:flex; align-items:center; justify-content:center; min-height:100vh;
+    font-family:'Cinzel',serif; font-size:18px; color:var(--ink-soft); letter-spacing:0.05em;
+  }
+
+  footer.site-footer{
+    text-align:center; padding:22px; font-size:13px; color:var(--ink-soft);
+    border-top:1px solid rgba(166,129,58,0.5);
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width:820px){
+    .layout{ flex-direction:column; }
+    nav.sidebar{
+      width:100%; padding:14px 16px; display:none;
+      border-bottom:1px solid var(--gold);
+    }
+    nav.sidebar.open{ display:block; }
+    .hamburger{ display:inline-block; }
+    .search-wrap{ width:150px; }
+    main.page-area{ padding:18px 14px 50px; }
+    .page-frame{ padding:24px 18px; outline-offset:3px; }
+    .hero h1{ font-size:36px; }
+    .entry-header h2{ font-size:26px; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="corner-flourish" viewBox="0 0 40 40">
+    <path d="M2,2 C2,20 20,2 38,2" fill="none" stroke="currentColor" stroke-width="1.4"/>
+    <path d="M2,2 C2,14 14,2 26,2" fill="none" stroke="currentColor" stroke-width="1"/>
+    <circle cx="2" cy="2" r="2.4" fill="currentColor"/>
+  </symbol>
+  <symbol id="icon-characters" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.3" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5.5,20 C5.5,15 8,12.5 12,12.5 C16,12.5 18.5,15 18.5,20" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="icon-locations" viewBox="0 0 24 24"><path d="M12,2.5 C7.8,2.5 4.5,5.8 4.5,9.8 C4.5,14.8 12,21.5 12,21.5 C12,21.5 19.5,14.8 19.5,9.8 C19.5,5.8 16.2,2.5 12,2.5 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9.6" r="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="icon-kingdoms" viewBox="0 0 24 24"><polyline points="3,17 5,7 9,12.5 12,5 15,12.5 19,7 21,17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><line x1="3" y1="19.5" x2="21" y2="19.5" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="icon-gods" viewBox="0 0 24 24"><path d="M2,12 C5,6.5 19,6.5 22,12 C19,17.5 5,17.5 2,12 Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="2.6" fill="currentColor"/></symbol>
+  <symbol id="icon-history" viewBox="0 0 24 24"><polygon points="6,3.5 18,3.5 12,12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><polygon points="6,20.5 18,20.5 12,12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="icon-factions" viewBox="0 0 24 24"><path d="M6,2.5 H18 V18 L12,14 L6,18 Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></symbol>
+  <symbol id="icon-creatures" viewBox="0 0 24 24"><circle cx="12" cy="15.5" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="6.8" cy="8.5" r="1.7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="6.3" r="1.7" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="17.2" cy="8.5" r="1.7" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="icon-items" viewBox="0 0 24 24"><polygon points="12,2.5 19.5,9.5 12,21.5 4.5,9.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><line x1="4.5" y1="9.5" x2="19.5" y2="9.5" stroke="currentColor" stroke-width="1.2"/></symbol>
+</svg>
+
+<div id="app-root">
+  <div id="loading" class="loading-screen">Unsealing the archives…</div>
+</div>
+
+<div id="modal-overlay"><div class="modal-box" id="modal-box"></div></div>
+
+<script>
+/* ====================================================================
+   LITHONIA — A WORLD COMPENDIUM
+   Single-file wiki app. Data persists via window.storage (shared).
+   ==================================================================== */
+
+// ---- DM PASSWORD: change this to your own secret phrase before sharing the link ----
+const DM_PASSCODE = "stonewarden";
+
+const CATEGORIES = [
+  { key:'characters', label:'Characters', color:'var(--c-characters)', hex:'#7A2727', icon:'icon-characters', desc:"The people who shape Lithonia's fate." },
+  { key:'locations',  label:'Locations',  color:'var(--c-locations)',  hex:'#3F5B3C', icon:'icon-locations',  desc:'Places explored and remembered.' },
+  { key:'kingdoms',   label:'Kingdoms',   color:'var(--c-kingdoms)',   hex:'#8A6D1F', icon:'icon-kingdoms',   desc:'Realms, thrones, and the borders between them.' },
+  { key:'gods',       label:'Gods',       color:'var(--c-gods)',       hex:'#5B3A5C', icon:'icon-gods',       desc:'The powers watching from beyond.' },
+  { key:'history',    label:'History',    color:'var(--c-history)',   hex:'#3E4A6B', icon:'icon-history',    desc:'Ages past, and the events that shaped them.' },
+  { key:'factions',   label:'Factions',   color:'var(--c-factions)',  hex:'#9C5024', icon:'icon-factions',   desc:'Orders, guilds, and secret societies.' },
+  { key:'creatures',  label:'Creatures',  color:'var(--c-creatures)', hex:'#2F5B57', icon:'icon-creatures',  desc:'Beasts, monsters, and things that hunt in the dark.' },
+  { key:'items',      label:'Items',      color:'var(--c-items)',     hex:'#6B5A1E', icon:'icon-items',      desc:'Relics, weapons, and artifacts of note.' }
+];
+
+function getCategory(key){ return CATEGORIES.find(c => c.key === key); }
+
+// ---------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------
+let entries = [];
+let aboutText = '';
+let isDM = false;
+let sidebarOpen = false;
+let view = { type:'home' };
+let dataLoaded = false;
+
+const SEED_ENTRIES = [
+  {
+    id:'seed_sera', title:'Sera Emberwood', category:'characters',
+    tags:['ranger','ally','ashwood'],
+    summary:'A sharp-eyed ranger of the Ashwood who has guided more than one doomed expedition home.',
+    content:`Sera Emberwood grew up along the fringe of the Ashwood, where the trees grow close enough to hide a person from the sky itself. She has spent more years reading the forest than reading people, which suits her fine.\n\nShe carries [[The Emberwood Blade]], a weapon she refuses to explain the origin of. Those who press the question are usually told, politely, to mind the trail ahead instead.\n\nSera is currently allied with the party, though her loyalty to [[The Ashen Circle]] runs deeper than she admits.`,
+    image:'', relatedIds:[], createdAt:Date.now()-90000000, updatedAt:Date.now()-90000000
+  },
+  {
+    id:'seed_spire', title:'The Sunken Spire', category:'locations',
+    tags:['ruin','coastal','dungeon'],
+    summary:'A drowned tower off the coast of Aldenreach, visible only at low tide.',
+    content:`Twice a day, the sea withdraws just far enough to reveal the broken crown of a tower that should not exist above water at all. Locals call it the Sunken Spire, and none of them will row out to it after dark.\n\nScholars believe it predates [[The Kingdom of Aldenreach]] by centuries, and may be connected to [[The Shattering of the First Stones]]. Strange stonework etched in a script no living sage can read lines its inner walls.`,
+    image:'', relatedIds:['seed_kingdom','seed_shattering'], createdAt:Date.now()-80000000, updatedAt:Date.now()-80000000
+  },
+  {
+    id:'seed_kingdom', title:'The Kingdom of Aldenreach', category:'kingdoms',
+    tags:['human','coastal','monarchy'],
+    summary:'A coastal human kingdom built on trade, old stone roads, and older promises.',
+    content:`Aldenreach rose from a scattering of fishing villages into the region's dominant power over three generations, largely on the strength of its stone-paved trade roads — a craft the kingdom guards jealously.\n\nIts current ruler maintains an uneasy peace with [[The Ashen Circle]], whose members are tolerated so long as they keep their business out of the capital.\n\nThe kingdom's coat of arms, a grey tower over waves, is said to reference [[The Sunken Spire]] — though the crown denies any official connection.`,
+    image:'', relatedIds:['seed_spire'], createdAt:Date.now()-70000000, updatedAt:Date.now()-70000000
+  },
+  {
+    id:'seed_god', title:'Voss, the Stonewarden', category:'gods',
+    tags:['deity','earth','order'],
+    summary:'God of stone, boundaries, and things that endure.',
+    content:`Voss is worshipped less through fervent prayer than through the simple, patient acts of building well and keeping promises. Masons, surveyors, and border-wardens all claim him, quietly, as their own.\n\nMyths hold that Voss wept only once, when [[The Shattering of the First Stones]] broke the world's oldest monuments, and that his tears became the veins of pale quartz found in ancient ruins today — including, some say, within [[The Sunken Spire]].`,
+    image:'', relatedIds:['seed_shattering'], createdAt:Date.now()-60000000, updatedAt:Date.now()-60000000
+  },
+  {
+    id:'seed_shattering', title:'The Shattering of the First Stones', category:'history',
+    tags:['cataclysm','ancient era'],
+    summary:'The cataclysm, ages past, that ended the First Era and gave the world its name.',
+    content:`Long before Aldenreach or any kingdom now standing, the world was marked by great standing stones said to hold the world's memory. Then, in a single night no calendar agrees on, they broke.\n\nThe cataclysm gave the land its modern name — Lithonia, from the old word for stone — as a reminder of what was lost. Fragments of the First Stones are still occasionally found, and are prized (or feared) accordingly.\n\n[[Voss, the Stonewarden]] is central to most surviving accounts of that night.`,
+    image:'', relatedIds:['seed_god'], createdAt:Date.now()-50000000, updatedAt:Date.now()-50000000
+  },
+  {
+    id:'seed_faction', title:'The Ashen Circle', category:'factions',
+    tags:['secret society','information brokers'],
+    summary:'A loose, secretive network trading in old knowledge and older favors.',
+    content:`No one joins the Ashen Circle so much as they are eventually noticed by it. Its members trade in information about the First Era, and are rumored to fund expeditions to sites like [[The Sunken Spire]] under other names.\n\n[[Sera Emberwood]] is believed to hold some rank within the Circle, though she has never confirmed it directly.`,
+    image:'', relatedIds:['seed_sera','seed_spire'], createdAt:Date.now()-40000000, updatedAt:Date.now()-40000000
+  },
+  {
+    id:'seed_creature', title:'Stoneback Wyrm', category:'creatures',
+    tags:['monster','ruins','beast'],
+    summary:'A slow, armored burrower that nests in old ruins and older grudges.',
+    content:`Stoneback wyrms are rarely aggressive unless their nest is disturbed — unfortunately, their nests tend to be exactly the kind of ancient ruin adventurers can't resist exploring, including sites tied to [[The Shattering of the First Stones]].\n\nTheir hide is dense enough that fragments of it are sometimes worked into armor, though few smiths will admit to sourcing the material.`,
+    image:'', relatedIds:['seed_shattering'], createdAt:Date.now()-30000000, updatedAt:Date.now()-30000000
+  },
+  {
+    id:'seed_item', title:'The Emberwood Blade', category:'items',
+    tags:['weapon','relic'],
+    summary:"A quietly humming shortsword carried by Sera Emberwood, of uncertain origin.",
+    content:`The blade never seems to dull, and hums faintly when brought near old stonework — including, notably, near [[The Sunken Spire]]. [[Sera Emberwood]] carries it always and speaks of it never.\n\nSome suspect it was forged from a fragment of a First Stone, which would make it considerably older, and more dangerous, than it looks.`,
+    image:'', relatedIds:['seed_sera','seed_spire'], createdAt:Date.now()-20000000, updatedAt:Date.now()-20000000
+  }
+];
+
+const DEFAULT_ABOUT = `Lithonia is a world still measuring itself against a wound in its own history — the Shattering that gave it its name. Kingdoms have risen since, gods are worshipped in old and new ways, and the ruins of a lost era wait, half-buried, for the next expedition foolish or brave enough to disturb them.\n\nThis compendium holds everything discovered so far. Browse the chapters at left, or search for something by name.`;
+
+// ---------------------------------------------------------------------
+// Storage
+// ---------------------------------------------------------------------
+async function loadData(){
+  try{
+    const res = await window.storage.get('lithonia-entries', true);
+    entries = res && res.value ? JSON.parse(res.value) : null;
+  } catch(e){ entries = null; }
+  if(!entries){
+    entries = SEED_ENTRIES;
+    await saveEntries();
+  }
+
+  try{
+    const res = await window.storage.get('lithonia-about', true);
+    aboutText = res && res.value ? JSON.parse(res.value) : null;
+  } catch(e){ aboutText = null; }
+  if(aboutText === null || aboutText === undefined){
+    aboutText = DEFAULT_ABOUT;
+    await saveAbout();
+  }
+  dataLoaded = true;
+}
+
+async function saveEntries(){
+  try{ await window.storage.set('lithonia-entries', JSON.stringify(entries), true); }
+  catch(e){ console.error('Failed to save entries', e); alert('Could not save — please check your connection and try again.'); }
+}
+
+async function saveAbout(){
+  try{ await window.storage.set('lithonia-about', JSON.stringify(aboutText), true); }
+  catch(e){ console.error('Failed to save about text', e); }
+}
+
+// ---------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------
+function escapeHtml(str){
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function genId(){ return 'e_' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function findEntryByTitle(title){
+  const t = title.trim().toLowerCase();
+  return entries.find(e => e.title.trim().toLowerCase() === t);
+}
+
+function renderContent(raw){
+  let text = escapeHtml(raw || '');
+  // bold
+  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // wiki links  [[Title]] or [[Title|Display]]
+  text = text.replace(/\[\[(.+?)\]\]/g, (m, inner) => {
+    const parts = inner.split('|');
+    const target = parts[0].trim();
+    const display = (parts[1] || parts[0]).trim();
+    const found = findEntryByTitle(target);
+    if(found){
+      return `<a class="wiki-link" href="javascript:void(0)" onclick="navigateToEntry('${found.id}')">${escapeHtml(display)}</a>`;
+    }
+    return `<span class="wiki-link unwritten" title="No entry written yet">${escapeHtml(display)}</span>`;
+  });
+  // paragraphs
+  const paras = text.split(/\n\s*\n/).map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+  return paras;
+}
+
+function fmtDate(ts){
+  return new Date(ts).toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
+}
+
+// ---------------------------------------------------------------------
+// Navigation
+// ---------------------------------------------------------------------
+function navigate(v){
+  view = v;
+  sidebarOpen = false;
+  render();
+  window.scrollTo(0,0);
+}
+function navigateToEntry(id){ navigate({ type:'entry', id }); }
+function navigateHome(){ navigate({ type:'home' }); }
+function navigateToCategory(key){ navigate({ type:'category', key }); }
+function navigateToSearch(q){ navigate({ type:'search', query:q }); }
+function navigateToEdit(id){ navigate({ type:'edit', id: id || null }); }
+
+// ---------------------------------------------------------------------
+// Modal
+// ---------------------------------------------------------------------
+function openModal(html){
+  document.getElementById('modal-box').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal-box').innerHTML = '';
+}
+document.getElementById('modal-overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'modal-overlay') closeModal();
+});
+
+// ---------------------------------------------------------------------
+// DM sign-in / sign-out
+// ---------------------------------------------------------------------
+function openSignInModal(){
+  openModal(`
+    <h3>DM sign-in</h3>
+    <p class="hint" style="margin-bottom:16px;">Enter the passcode to add, edit, or remove entries. This is a light lock to keep browsing tidy for your players — not real security.</p>
+    <form id="signin-form" class="form-grid" onsubmit="return handleSignIn(event)">
+      <div>
+        <label for="passcode-input">Passcode</label>
+        <input type="password" id="passcode-input" autofocus>
+        <div id="signin-error" class="hint" style="color:var(--seal); display:none;">That's not it. Try again.</div>
+      </div>
+      <div class="modal-close-row">
+        <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn">Sign in</button>
+      </div>
+    </form>
+  `);
+  setTimeout(()=>{ const el = document.getElementById('passcode-input'); if(el) el.focus(); }, 30);
+}
+function handleSignIn(e){
+  e.preventDefault();
+  const val = document.getElementById('passcode-input').value;
+  if(val === DM_PASSCODE){
+    isDM = true;
+    closeModal();
+    render();
+  } else {
+    document.getElementById('signin-error').style.display = 'block';
+  }
+  return false;
+}
+function signOut(){
+  isDM = false;
+  if(view.type === 'edit') view = { type:'home' };
+  render();
+}
+
+// ---------------------------------------------------------------------
+// Export / Import backup
+// ---------------------------------------------------------------------
+function exportBackup(){
+  const payload = { exportedAt: new Date().toISOString(), about: aboutText, entries: entries };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'lithonia-backup-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function triggerImport(){
+  document.getElementById('import-file-input').click();
+}
+function handleImportFile(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async (evt) => {
+    try{
+      const data = JSON.parse(evt.target.result);
+      if(!data.entries || !Array.isArray(data.entries)) throw new Error('bad format');
+      const ok = confirm('This will replace the entire wiki (' + entries.length + ' entries) with ' + data.entries.length + ' entries from the backup file. Continue?');
+      if(!ok) return;
+      entries = data.entries;
+      aboutText = data.about || aboutText;
+      await saveEntries();
+      await saveAbout();
+      navigateHome();
+    } catch(err){
+      alert('That file could not be read as a Lithonia backup.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ---------------------------------------------------------------------
+// About editing
+// ---------------------------------------------------------------------
+function openAboutEditor(){
+  openModal(`
+    <h3>Edit the world's introduction</h3>
+    <form class="form-grid" onsubmit="return handleAboutSave(event)">
+      <div>
+        <label for="about-textarea">Shown at the top of the home page</label>
+        <textarea id="about-textarea" class="big">${escapeHtml(aboutText)}</textarea>
+      </div>
+      <div class="modal-close-row">
+        <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
+        <button type="submit" class="btn">Save</button>
+      </div>
+    </form>
+  `);
+}
+async function handleAboutSave(e){
+  e.preventDefault();
+  aboutText = document.getElementById('about-textarea').value;
+  await saveAbout();
+  closeModal();
+  render();
+  return false;
+}
+
+// ---------------------------------------------------------------------
+// Add / Edit entry form
+// ---------------------------------------------------------------------
+function relatedOptionsHtml(currentId, selectedIds){
+  return CATEGORIES.map(cat => {
+    const opts = entries
+      .filter(e => e.category === cat.key && e.id !== currentId)
+      .sort((a,b)=>a.title.localeCompare(b.title))
+      .map(e => `<option value="${e.id}" ${selectedIds.includes(e.id) ? 'selected' : ''}>${escapeHtml(e.title)}</option>`)
+      .join('');
+    return opts ? `<optgroup label="${escapeHtml(cat.label)}">${opts}</optgroup>` : '';
+  }).join('');
+}
+
+function renderEditForm(){
+  const editingId = view.id;
+  const editing = editingId ? entries.find(e => e.id === editingId) : null;
+  const presetCat = (!editing && view.presetCategory) ? view.presetCategory : (editing ? editing.category : CATEGORIES[0].key);
+
+  const catOptions = CATEGORIES.map(c =>
+    `<option value="${c.key}" ${c.key === presetCat ? 'selected' : ''}>${c.label}</option>`
+  ).join('');
+
+  const html = `
+    <div class="breadcrumb">
+      <a href="javascript:void(0)" onclick="navigateHome()">Home</a>
+      <span class="sep">›</span>
+      ${editing ? `<a href="javascript:void(0)" onclick="navigateToEntry('${editing.id}')">${escapeHtml(editing.title)}</a><span class="sep">›</span> Edit` : 'New entry'}
+    </div>
+    <h2 style="margin-bottom:20px;">${editing ? 'Edit entry' : 'Add a new entry'}</h2>
+    <form id="entry-form" class="form-grid" onsubmit="return handleEntrySave(event, ${editing ? `'${editing.id}'` : 'null'})">
+      <div>
+        <label for="f-title">Title</label>
+        <input id="f-title" type="text" required value="${editing ? escapeHtml(editing.title) : ''}">
+      </div>
+      <div>
+        <label for="f-category">Chapter</label>
+        <select id="f-category">${catOptions}</select>
+      </div>
+      <div>
+        <label for="f-tags">Tags <span class="hint">(comma separated)</span></label>
+        <input id="f-tags" type="text" value="${editing ? escapeHtml(editing.tags.join(', ')) : ''}">
+      </div>
+      <div>
+        <label for="f-summary">Short summary <span class="hint">(shown in lists)</span></label>
+        <textarea id="f-summary">${editing ? escapeHtml(editing.summary) : ''}</textarea>
+      </div>
+      <div>
+        <label for="f-image">Image URL <span class="hint">(optional)</span></label>
+        <input id="f-image" type="text" placeholder="https://..." value="${editing ? escapeHtml(editing.image || '') : ''}">
+      </div>
+      <div>
+        <label for="f-content">Full entry</label>
+        <div class="hint" style="margin-bottom:6px;">Use blank lines for new paragraphs, **text** for bold, and [[Entry Title]] to link to another entry.</div>
+        <textarea id="f-content" class="big">${editing ? escapeHtml(editing.content) : ''}</textarea>
+      </div>
+      <div>
+        <label for="f-related">Related entries <span class="hint">(ctrl/cmd-click to select several)</span></label>
+        <select id="f-related" multiple size="6">
+          ${relatedOptionsHtml(editing ? editing.id : null, editing ? editing.relatedIds || [] : [])}
+        </select>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn">${editing ? 'Save changes' : 'Add entry'}</button>
+        <button type="button" class="btn secondary" onclick="${editing ? `navigateToEntry('${editing.id}')` : 'navigateHome()'}">Cancel</button>
+        ${editing ? `<button type="button" class="btn danger" style="margin-left:auto;" onclick="handleDeleteEntry('${editing.id}')">Delete entry</button>` : ''}
+      </div>
+    </form>
+  `;
+  return html;
+}
+
+async function handleEntrySave(e, editingId){
+  e.preventDefault();
+  const title = document.getElementById('f-title').value.trim();
+  if(!title){ alert('Please give the entry a title.'); return false; }
+  const category = document.getElementById('f-category').value;
+  const tags = document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const summary = document.getElementById('f-summary').value.trim();
+  const image = document.getElementById('f-image').value.trim();
+  const content = document.getElementById('f-content').value;
+  const related = Array.from(document.getElementById('f-related').selectedOptions).map(o=>o.value);
+
+  if(editingId){
+    const entry = entries.find(e2 => e2.id === editingId);
+    Object.assign(entry, { title, category, tags, summary, image, content, relatedIds: related, updatedAt: Date.now() });
+    await saveEntries();
+    navigateToEntry(editingId);
+  } else {
+    const newEntry = {
+      id: genId(), title, category, tags, summary, image, content,
+      relatedIds: related, createdAt: Date.now(), updatedAt: Date.now()
+    };
+    entries.push(newEntry);
+    await saveEntries();
+    navigateToEntry(newEntry.id);
+  }
+  return false;
+}
+
+async function handleDeleteEntry(id){
+  const entry = entries.find(e=>e.id === id);
+  if(!entry) return;
+  const ok = confirm(`Delete "${entry.title}" permanently? This can't be undone.`);
+  if(!ok) return;
+  entries = entries.filter(e=>e.id !== id);
+  entries.forEach(e => { if(e.relatedIds) e.relatedIds = e.relatedIds.filter(r => r !== id); });
+  await saveEntries();
+  navigateHome();
+}
+
+// ---------------------------------------------------------------------
+// Search
+// ---------------------------------------------------------------------
+function matchEntries(query){
+  const q = query.trim().toLowerCase();
+  if(!q) return [];
+  return entries.filter(e => {
+    if(e.title.toLowerCase().includes(q)) return true;
+    if(e.summary && e.summary.toLowerCase().includes(q)) return true;
+    if(e.tags && e.tags.some(t => t.toLowerCase().includes(q))) return true;
+    return false;
+  }).sort((a,b)=>a.title.localeCompare(b.title));
+}
+
+function handleSearchInput(e){
+  const q = e.target.value;
+  const drop = document.getElementById('search-drop');
+  if(!drop) return;
+  if(!q.trim()){ drop.style.display = 'none'; drop.innerHTML=''; return; }
+  const results = matchEntries(q).slice(0,8);
+  if(results.length === 0){
+    drop.innerHTML = `<div class="search-empty">No lore found for "${escapeHtml(q)}"</div>`;
+  } else {
+    drop.innerHTML = results.map(r => {
+      const cat = getCategory(r.category);
+      return `<div class="sr-item" onclick="closeSearchDrop(); navigateToEntry('${r.id}')">
+        <span class="chapter-dot" style="background:${cat.hex}"></span>
+        <span class="sr-title">${escapeHtml(r.title)}</span>
+        <span class="sr-cat">${cat.label}</span>
+      </div>`;
+    }).join('');
+  }
+  drop.style.display = 'block';
+}
+function handleSearchKeydown(e){
+  if(e.key === 'Enter'){
+    const q = e.target.value;
+    if(q.trim()){ closeSearchDrop(); navigateToSearch(q); e.target.blur(); }
+  } else if(e.key === 'Escape'){
+    closeSearchDrop();
+    e.target.blur();
+  }
+}
+function closeSearchDrop(){
+  const drop = document.getElementById('search-drop');
+  if(drop){ drop.style.display = 'none'; }
+}
+document.addEventListener('click', (e)=>{
+  const wrap = document.getElementById('search-wrap-el');
+  if(wrap && !wrap.contains(e.target)) closeSearchDrop();
+});
+
+function toggleSidebar(){ sidebarOpen = !sidebarOpen; render(); }
+
+// ---------------------------------------------------------------------
+// Rendering: shared chrome
+// ---------------------------------------------------------------------
+function renderHeader(){
+  return `
+    <header class="masthead">
+      <button class="btn secondary tiny hamburger" onclick="toggleSidebar()">&#9776; Chapters</button>
+      <div class="masthead-title" onclick="navigateHome()">
+        Lithonia
+        <small>A world compendium</small>
+      </div>
+      <div class="masthead-spacer"></div>
+      <div class="search-wrap" id="search-wrap-el">
+        <input id="search-input" type="text" placeholder="Search the compendium…" oninput="handleSearchInput(event)" onkeydown="handleSearchKeydown(event)" autocomplete="off">
+        <div class="search-results-drop" id="search-drop" style="display:none;"></div>
+      </div>
+      <div class="dm-controls">
+        ${isDM ? `
+          <span class="dm-badge">DM mode</span>
+          <button class="btn secondary tiny" onclick="exportBackup()">Export backup</button>
+          <button class="btn secondary tiny" onclick="triggerImport()">Import backup</button>
+          <input type="file" id="import-file-input" accept="application/json" style="display:none" onchange="handleImportFile(event)">
+          <button class="btn secondary tiny" onclick="signOut()">Sign out</button>
+        ` : `
+          <button class="btn secondary tiny" onclick="openSignInModal()">DM sign-in</button>
+        `}
+      </div>
+    </header>
+  `;
+}
+
+function renderSidebar(){
+  const activeKey = view.type === 'category' ? view.key : null;
+  const items = CATEGORIES.map(cat => {
+    const count = entries.filter(e => e.category === cat.key).length;
+    return `
+      <div class="chapter-link ${activeKey === cat.key ? 'active' : ''}" onclick="navigateToCategory('${cat.key}')">
+        <span class="chapter-dot" style="background:${cat.hex}"></span>
+        <span>${cat.label}</span>
+        <span class="chapter-count">${count}</span>
+      </div>
+    `;
+  }).join('');
+  return `
+    <nav class="sidebar ${sidebarOpen ? 'open' : ''}">
+      <div class="sidebar-home-link" onclick="navigateHome()">&#8962; Home</div>
+      <h4>Chapters</h4>
+      ${items}
+    </nav>
+  `;
+}
+
+function renderCorners(){
+  return `
+    <svg class="corner tl"><use href="#corner-flourish"/></svg>
+    <svg class="corner tr"><use href="#corner-flourish"/></svg>
+    <svg class="corner bl"><use href="#corner-flourish"/></svg>
+    <svg class="corner br"><use href="#corner-flourish"/></svg>
+  `;
+}
+
+// ---------------------------------------------------------------------
+// Rendering: page bodies
+// ---------------------------------------------------------------------
+function renderHome(){
+  const chapterTiles = CATEGORIES.map(cat => {
+    const count = entries.filter(e=>e.category===cat.key).length;
+    return `
+      <div class="chapter-tile" onclick="navigateToCategory('${cat.key}')">
+        <div class="seal" style="background:${cat.hex}"><svg><use href="#${cat.icon}"/></svg></div>
+        <h3>${cat.label}</h3>
+        <p>${cat.desc}</p>
+        <div class="tile-count">${count} ${count === 1 ? 'entry' : 'entries'}</div>
+      </div>
+    `;
+  }).join('');
+
+  const recent = [...entries].sort((a,b)=>b.updatedAt - a.updatedAt).slice(0,5).map(e => {
+    const cat = getCategory(e.category);
+    return `
+      <div class="recent-row" onclick="navigateToEntry('${e.id}')">
+        <span class="chapter-dot" style="background:${cat.hex}"></span>
+        <span class="recent-title">${escapeHtml(e.title)}</span>
+        <span class="recent-cat">${cat.label}</span>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="hero">
+      <h1>Lithonia</h1>
+      <svg class="flourish" viewBox="0 0 220 22"><path d="M0,11 H80 M140,11 H220 M100,11 a10,10 0 1,0 20,0 a10,10 0 1,0 -20,0" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+      <div class="hero-about">
+        <p>${renderContentPlain(aboutText)}</p>
+        ${isDM ? `<button class="btn secondary tiny about-edit-btn" onclick="openAboutEditor()">Edit introduction</button>` : ''}
+      </div>
+    </div>
+    <div class="chapter-grid">${chapterTiles}</div>
+    ${entries.length ? `
+      <h2 class="section-heading">Recently updated</h2>
+      <div class="recent-list">${recent}</div>
+    ` : ''}
+  `;
+}
+
+function renderContentPlain(text){
+  // Plain paragraph rendering (no drop-cap, no wiki-links) for the About blurb
+  return escapeHtml(text || '').split(/\n\s*\n/).join('</p><p style="margin-top:14px;">');
+}
+
+function renderCategory(key){
+  const cat = getCategory(key);
+  const list = entries.filter(e=>e.category===key).sort((a,b)=>a.title.localeCompare(b.title));
+  const rows = list.map(e => `
+    <div class="entry-row" onclick="navigateToEntry('${e.id}')">
+      <div class="entry-tab" style="background:${cat.hex}"></div>
+      <div class="entry-row-body">
+        <div class="entry-row-title">${escapeHtml(e.title)}</div>
+        ${e.summary ? `<div class="entry-row-summary">${escapeHtml(e.summary)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="breadcrumb"><a href="javascript:void(0)" onclick="navigateHome()">Home</a><span class="sep">›</span>${cat.label}</div>
+    <div class="cat-header">
+      <div class="seal" style="background:${cat.hex}"><svg><use href="#${cat.icon}"/></svg></div>
+      <div>
+        <h2>${cat.label}</h2>
+      </div>
+    </div>
+    <p class="cat-desc">${cat.desc}</p>
+    ${isDM ? `<div class="cat-toolbar"><button class="btn tiny" onclick="navigate({type:'edit', id:null, presetCategory:'${key}'})">+ Add entry to ${cat.label}</button></div>` : ''}
+    <div class="entry-list">
+      ${rows || `<div class="empty-note">No entries yet in this chapter.${isDM ? ' Use the button above to add the first one.' : ''}</div>`}
+    </div>
+  `;
+}
+
+function renderEntry(id){
+  const entry = entries.find(e=>e.id === id);
+  if(!entry){
+    return `<div class="empty-note">That entry no longer exists. <a href="javascript:void(0)" onclick="navigateHome()">Return home</a>.</div>`;
+  }
+  const cat = getCategory(entry.category);
+  const related = (entry.relatedIds || []).map(rid => entries.find(e=>e.id===rid)).filter(Boolean);
+
+  return `
+    <div class="breadcrumb">
+      <a href="javascript:void(0)" onclick="navigateHome()">Home</a>
+      <span class="sep">›</span>
+      <a href="javascript:void(0)" onclick="navigateToCategory('${cat.key}')">${cat.label}</a>
+      <span class="sep">›</span>
+      ${escapeHtml(entry.title)}
+    </div>
+    <div class="cat-badge" style="background:${cat.hex}"><svg><use href="#${cat.icon}"/></svg>${cat.label}</div>
+    <div class="entry-header">
+      <h2>${escapeHtml(entry.title)}</h2>
+      ${isDM ? `
+        <div class="entry-actions">
+          <button class="btn secondary tiny" onclick="navigateToEdit('${entry.id}')">Edit</button>
+          <button class="btn danger tiny" onclick="handleDeleteEntry('${entry.id}')">Delete</button>
+        </div>
+      ` : ''}
+    </div>
+    ${entry.tags && entry.tags.length ? `
+      <div class="entry-tags">
+        ${entry.tags.map(t => `<span class="tag-pill" onclick="navigateToSearch('${escapeHtml(t)}')">${escapeHtml(t)}</span>`).join('')}
+      </div>
+    ` : ''}
+    ${entry.image ? `<img class="entry-image" src="${escapeHtml(entry.image)}" alt="${escapeHtml(entry.title)}" onerror="this.style.display='none'">` : ''}
+    <div class="entry-content">${renderContent(entry.content)}</div>
+    ${related.length ? `
+      <div class="related-box">
+        <h4>Related entries</h4>
+        ${related.map(r => `<span class="related-pill" onclick="navigateToEntry('${r.id}')">${escapeHtml(r.title)}</span>`).join('')}
+      </div>
+    ` : ''}
+    <div class="entry-meta">Last updated ${fmtDate(entry.updatedAt)}</div>
+  `;
+}
+
+function renderSearch(query){
+  const results = matchEntries(query);
+  const rows = results.map(e => {
+    const cat = getCategory(e.category);
+    return `
+      <div class="entry-row" onclick="navigateToEntry('${e.id}')">
+        <div class="entry-tab" style="background:${cat.hex}"></div>
+        <div class="entry-row-body">
+          <div class="entry-row-title">${escapeHtml(e.title)}</div>
+          <div class="entry-row-summary">${cat.label}${e.summary ? ' — ' + escapeHtml(e.summary) : ''}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="breadcrumb"><a href="javascript:void(0)" onclick="navigateHome()">Home</a><span class="sep">›</span>Search</div>
+    <h2 style="margin-bottom:20px;">Results for "${escapeHtml(query)}"</h2>
+    <div class="entry-list">${rows || `<div class="empty-note">No lore found. Try another word, or check with your DM.</div>`}</div>
+  `;
+}
+
+// ---------------------------------------------------------------------
+// Main render dispatch
+// ---------------------------------------------------------------------
+function renderPageBody(){
+  switch(view.type){
+    case 'home': return renderHome();
+    case 'category': return renderCategory(view.key);
+    case 'entry': return renderEntry(view.id);
+    case 'search': return renderSearch(view.query);
+    case 'edit': return renderEditForm();
+    default: return renderHome();
+  }
+}
+
+function render(){
+  const root = document.getElementById('app-root');
+  root.innerHTML = `
+    ${renderHeader()}
+    <div class="layout">
+      ${renderSidebar()}
+      <main class="page-area">
+        <div class="page-frame">
+          ${renderCorners()}
+          ${renderPageBody()}
+        </div>
+      </main>
+    </div>
+    <footer class="site-footer">Lithonia — a living record, added to after every session.</footer>
+  `;
+}
+
+// ---------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------
+(async function init(){
+  await loadData();
+  render();
+})();
+</script>
+</body>
+</html>
