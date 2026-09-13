@@ -574,6 +574,7 @@ async function saveAbout(){
     console.error('Failed to save about text:', e);
     alert('Could not save the introduction. Make sure you are signed in as the DM.');
   }
+}
 
 // ---------------------------------------------------------------------
 // Helpers
@@ -651,41 +652,32 @@ document.getElementById('modal-overlay').addEventListener('click', (e)=>{
 function openSignInModal(){
   openModal(`
     <h3>DM sign-in</h3>
-    <p class="hint" style="margin-bottom:16px;">Enter the passcode to add, edit, or remove entries. This is a light lock to keep browsing tidy for your players — not real security.</p>
+    <p class="hint" style="margin-bottom:16px;">
+      Sign in with the DM account to add, edit, or remove entries.
+    </p>
+
     <form id="signin-form" class="form-grid" onsubmit="return handleSignIn(event)">
       <div>
-        <label for="passcode-input">Passcode</label>
-        <input type="password" id="passcode-input" autofocus>
-        <div id="signin-error" class="hint" style="color:var(--seal); display:none;">That's not it. Try again.</div>
+        <label for="email-input">Email</label>
+        <input type="email" id="email-input" autocomplete="email" required>
       </div>
+
+      <div>
+        <label for="password-input">Password</label>
+        <input type="password" id="password-input" autocomplete="current-password" required>
+      </div>
+
       <div class="modal-close-row">
         <button type="button" class="btn secondary" onclick="closeModal()">Cancel</button>
         <button type="submit" class="btn">Sign in</button>
       </div>
     </form>
   `);
-  setTimeout(()=>{ const el = document.getElementById('passcode-input'); if(el) el.focus(); }, 30);
-}
-async function handleSignIn(e){
-  e.preventDefault();
 
-  const email = document.getElementById('email-input').value.trim();
-  const password = document.getElementById('password-input').value;
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if(error){
-    alert('Sign-in failed: ' + error.message);
-    return false;
-  }
-
-  isDM = true;
-  closeModal();
-  render();
-  return false;
+  setTimeout(()=>{
+    const el = document.getElementById('email-input');
+    if(el) el.focus();
+  }, 30);
 }
 
 // ---------------------------------------------------------------------
@@ -1154,11 +1146,24 @@ function render(){
     <footer class="site-footer">Lithonia — a living record, added to after every session.</footer>
   `;
 }
+async function signOut(){
+  await supabase.auth.signOut();
+  isDM = false;
+  render();
+}
 
 // ---------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------
 (async function init(){
+  const { data: { session } } = await supabase.auth.getSession();
+  isDM = !!session;
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    isDM = !!session;
+    render();
+  });
+
   await loadData();
   render();
 })();
