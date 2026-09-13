@@ -400,63 +400,7 @@ let view = { type:'home' };
 let dataLoaded = false;
 
 
-  {
-    id:'seed_sera', title:'Sera Emberwood', category:'characters',
-    tags:['ranger','ally','ashwood'],
-    summary:'A sharp-eyed ranger of the Ashwood who has guided more than one doomed expedition home.',
-    content:`Sera Emberwood grew up along the fringe of the Ashwood, where the trees grow close enough to hide a person from the sky itself. She has spent more years reading the forest than reading people, which suits her fine.\n\nShe carries [[The Emberwood Blade]], a weapon she refuses to explain the origin of. Those who press the question are usually told, politely, to mind the trail ahead instead.\n\nSera is currently allied with the party, though her loyalty to [[The Ashen Circle]] runs deeper than she admits.`,
-    image:'', relatedIds:[], createdAt:Date.now()-90000000, updatedAt:Date.now()-90000000
-  },
-  {
-    id:'seed_spire', title:'The Sunken Spire', category:'locations',
-    tags:['ruin','coastal','dungeon'],
-    summary:'A drowned tower off the coast of Aldenreach, visible only at low tide.',
-    content:`Twice a day, the sea withdraws just far enough to reveal the broken crown of a tower that should not exist above water at all. Locals call it the Sunken Spire, and none of them will row out to it after dark.\n\nScholars believe it predates [[The Kingdom of Aldenreach]] by centuries, and may be connected to [[The Shattering of the First Stones]]. Strange stonework etched in a script no living sage can read lines its inner walls.`,
-    image:'', relatedIds:['seed_kingdom','seed_shattering'], createdAt:Date.now()-80000000, updatedAt:Date.now()-80000000
-  },
-  {
-    id:'seed_kingdom', title:'The Kingdom of Aldenreach', category:'kingdoms',
-    tags:['human','coastal','monarchy'],
-    summary:'A coastal human kingdom built on trade, old stone roads, and older promises.',
-    content:`Aldenreach rose from a scattering of fishing villages into the region's dominant power over three generations, largely on the strength of its stone-paved trade roads — a craft the kingdom guards jealously.\n\nIts current ruler maintains an uneasy peace with [[The Ashen Circle]], whose members are tolerated so long as they keep their business out of the capital.\n\nThe kingdom's coat of arms, a grey tower over waves, is said to reference [[The Sunken Spire]] — though the crown denies any official connection.`,
-    image:'', relatedIds:['seed_spire'], createdAt:Date.now()-70000000, updatedAt:Date.now()-70000000
-  },
-  {
-    id:'seed_god', title:'Voss, the Stonewarden', category:'gods',
-    tags:['deity','earth','order'],
-    summary:'God of stone, boundaries, and things that endure.',
-    content:`Voss is worshipped less through fervent prayer than through the simple, patient acts of building well and keeping promises. Masons, surveyors, and border-wardens all claim him, quietly, as their own.\n\nMyths hold that Voss wept only once, when [[The Shattering of the First Stones]] broke the world's oldest monuments, and that his tears became the veins of pale quartz found in ancient ruins today — including, some say, within [[The Sunken Spire]].`,
-    image:'', relatedIds:['seed_shattering'], createdAt:Date.now()-60000000, updatedAt:Date.now()-60000000
-  },
-  {
-    id:'seed_shattering', title:'The Shattering of the First Stones', category:'history',
-    tags:['cataclysm','ancient era'],
-    summary:'The cataclysm, ages past, that ended the First Era and gave the world its name.',
-    content:`Long before Aldenreach or any kingdom now standing, the world was marked by great standing stones said to hold the world's memory. Then, in a single night no calendar agrees on, they broke.\n\nThe cataclysm gave the land its modern name — Lithonia, from the old word for stone — as a reminder of what was lost. Fragments of the First Stones are still occasionally found, and are prized (or feared) accordingly.\n\n[[Voss, the Stonewarden]] is central to most surviving accounts of that night.`,
-    image:'', relatedIds:['seed_god'], createdAt:Date.now()-50000000, updatedAt:Date.now()-50000000
-  },
-  {
-    id:'seed_faction', title:'The Ashen Circle', category:'factions',
-    tags:['secret society','information brokers'],
-    summary:'A loose, secretive network trading in old knowledge and older favors.',
-    content:`No one joins the Ashen Circle so much as they are eventually noticed by it. Its members trade in information about the First Era, and are rumored to fund expeditions to sites like [[The Sunken Spire]] under other names.\n\n[[Sera Emberwood]] is believed to hold some rank within the Circle, though she has never confirmed it directly.`,
-    image:'', relatedIds:['seed_sera','seed_spire'], createdAt:Date.now()-40000000, updatedAt:Date.now()-40000000
-  },
-  {
-    id:'seed_creature', title:'Stoneback Wyrm', category:'creatures',
-    tags:['monster','ruins','beast'],
-    summary:'A slow, armored burrower that nests in old ruins and older grudges.',
-    content:`Stoneback wyrms are rarely aggressive unless their nest is disturbed — unfortunately, their nests tend to be exactly the kind of ancient ruin adventurers can't resist exploring, including sites tied to [[The Shattering of the First Stones]].\n\nTheir hide is dense enough that fragments of it are sometimes worked into armor, though few smiths will admit to sourcing the material.`,
-    image:'', relatedIds:['seed_shattering'], createdAt:Date.now()-30000000, updatedAt:Date.now()-30000000
-  },
-  {
-    id:'seed_item', title:'The Emberwood Blade', category:'items',
-    tags:['weapon','relic'],
-    summary:"A quietly humming shortsword carried by Sera Emberwood, of uncertain origin.",
-    content:`The blade never seems to dull, and hums faintly when brought near old stonework — including, notably, near [[The Sunken Spire]]. [[Sera Emberwood]] carries it always and speaks of it never.\n\nSome suspect it was forged from a fragment of a First Stone, which would make it considerably older, and more dangerous, than it looks.`,
-    image:'', relatedIds:['seed_sera','seed_spire'], createdAt:Date.now()-20000000, updatedAt:Date.now()-20000000
-  }
-];
+
 
 const DEFAULT_ABOUT = `Lithonia is a world still measuring itself against a wound in its own history — the Shattering that gave it its name. Kingdoms have risen since, gods are worshipped in old and new ways, and the ruins of a lost era wait, half-buried, for the next expedition foolish or brave enough to disturb them.\n\nThis compendium holds everything discovered so far. Browse the chapters at left, or search for something by name.`;
 
