@@ -426,7 +426,7 @@ function rowToEntry(row){
 
 async function loadData(){
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('entries')
       .select('*')
       .order('title', { ascending: true });
@@ -435,7 +435,7 @@ async function loadData(){
 
     entries = (data || []).map(rowToEntry);
 
-    const { data: settings, error: settingsError } = await supabase
+    const { data: settings, error: settingsError } = await db
       .from('wiki_settings')
       .select('*')
       .eq('id', 'main')
@@ -470,7 +470,7 @@ async function saveEntryToDatabase(entry){
     updated_at: entry.updatedAt
   };
 
-  const { error } = await supabase
+  const { error } = await db
     .from('entries')
     .upsert(row);
 
@@ -482,7 +482,7 @@ async function saveEntryToDatabase(entry){
 }
 
 async function deleteEntryFromDatabase(id){
-  const { error } = await supabase
+  const { error } = await db
     .from('entries')
     .delete()
     .eq('id', id);
@@ -506,7 +506,7 @@ async function saveEntries(){
 
 async function saveAbout(){
   try {
-    const { error } = await supabase
+    const { error } = await db
       .from('wiki_settings')
       .upsert({
         id: 'main',
